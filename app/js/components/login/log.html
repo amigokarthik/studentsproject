@@ -1,0 +1,39 @@
+
+  <div class="row">
+    <div class="col-sm-12">
+      <center><h1>Innovision Student Portal</h1><br/></center>
+    </div>
+  </div>
+  <hr/>
+
+  <font style="color:green;">If your are a returning user please login</font>
+  <div class="row">
+    <form ng-submit="model.login()" name="pFormss">
+      <div class="col-sm-5">
+
+        <input type="text" class="form-control" aria-describedby="sizing-addon1" ng-model="model.userNamel" placeholder="Username" name="unamel" ng-required="true" />
+        <div ng-show="(pForm.unamel.$touched && pForm.unamel.$invalid)">
+          <small style="color : red; display : block; text-align : center;">Please enter a valid user name</small>
+        </div>
+
+      </div>
+      <div class="col-sm-5">
+
+        <input type="password" placeholder="Password" class="form-control" pattern=".{6,24}" aria-describedby="sizing-addon1" ng-model="model.pswdl"  name="pswdl" ng-required="true" />
+        <div ng-show="(pForm.pswdl.$touched && pForm.pswdl.$invalid)">
+          <small style="color : red; display : block; text-align : center;">Password length must be between 6 and 24</small>
+        </div>
+
+      </div>
+      <div class="col-sm-2">
+        <input type="submit" class="btn btn-primary btn-lg" value="Login"  />
+      </div>
+    </form>
+    <font style="color:Red;">{{er}}</font>
+  </div>
+  <br/>
+  <hr/>
+
+  <a ui-sref='register'>Register</a>
+
+  <div ui-view='subcontent'></div>

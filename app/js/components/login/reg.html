@@ -1,0 +1,58 @@
+
+<div class="row">
+  <div class="col-sm-12">
+    <center>
+      <form ng-submit="createMeetup()" name="pForm">
+        <div class="table-responsive">
+          <table style="width:90%" align="center" class="table table-striped">
+            <tbody>
+              <tr>
+                <td width="18%">User Name <span style="color:red">*</span>:</td>
+                <td width="82%">
+                  <input type="text" class="form-control" aria-describedby="sizing-addon1" ng-model="userName" placeholder="Username" name="uname" ng-required="true" />
+                  <div ng-show="(pForm.uname.$touched && pForm.uname.$invalid) || usernameValid">
+                    <small style="color : red; display : block; text-align : center;">Please enter a valid user name</small>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td width="18%">Password<span style="color:red">*</span>:</td>
+                <td width="82%">
+                  <input type="password" placeholder="Password" class="form-control" pattern=".{6,24}" aria-describedby="sizing-addon1" ng-model="pswd"  name="pswd" ng-required="true" />
+                  <div ng-show="(pForm.pswd.$touched && pForm.pswd.$invalid) || usernameValid">
+                    <small style="color : red; display : block; text-align : center;">Password length must be between 6 and 24</small>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td width="18%">College Name <span style="color:red">*</span>:</td>
+                <td width="82%">
+                  <input type="text" class="form-control" aria-describedby="sizing-addon1" ng-model="cName" placeholder="College Name" name="cname" ng-required="true" />
+                  <div ng-show="(pForm.cname.$touched && pForm.cname.$invalid)">
+                    <small style="color : red; display : block; text-align : center;">Please enter a valid college name</small>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td width="18%">Email<span style="color:red">*</span>:</td>
+                <td width="82%">
+                  <input type="email" class="form-control" placeholder="me@example.com" aria-describedby="sizing-addon1" name="input" ng-model="email" ng-required="true">
+                  <div ng-show="(pForm.input.$touched && pForm.input.$invalid) || pForm.input.$error.email">
+                    <small style="color : red; display : block; text-align : center;">Please enter a valid email</small>
+                  </div>
+                </td>
+              </tr>
+              <tr></tr>
+              <tr>
+                <td></td>
+                <td><center><input type="submit" class="btn btn-primary btn-lg" value="Register" ng-disabled="pForm.$invalid" />
+                </center></td>
+              </tr>
+            </tbody>
+          </table>
+        </form>
+        <font style="color:Red;">{{regerr}}</font>
+      </center>
+    </div>
+  </div>
+</div>
