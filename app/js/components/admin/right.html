@@ -1,0 +1,12 @@
+<font style="color:Blue;"><b>Provide student rankings for course:</b></font>
+<br/><br/>
+<div class="form-group" ng-repeat="x in model.datap track by $index" id="co">
+<form ng-submit="model.rank(x.username,x.course)" name="pForm">
+<font style="color:Blue;">Username : </font>{{x.username}}</p>
+<font style="color:Blue;">Course : </font>{{x.course}}</p>
+<input type="number"  class="form-control" aria-describedby="sizing-addon1" pattern=".{10,}" ng-model="phone" min="1" max="10"  name="phone" style="color:black;"  placeholder="Give Rank" id="rnk" ></input>
+<br/>
+<input type="submit" class="btn btn-primary btn-md" value="Submit Rank"  />
+<hr/>
+</form>
+</div>

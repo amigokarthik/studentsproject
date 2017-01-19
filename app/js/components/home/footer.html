@@ -1,0 +1,29 @@
+<div class="row">
+  <div class="col-sm-12">
+    <font style="color:Blue;"><b>Your Course Ranking :</b></font>
+    <div class="table-responsive">
+      <table style="width:90%" align="center" class="table table-striped">
+        <tbody>
+          <tr>
+            <td width="50%">Course</td>
+            <td width="50%">Rank</td>
+          </tr>
+      </tbody>
+    </table>
+    </div>
+    <div ng-repeat="x in model.datapr track by $index">
+      <div class="form-group">
+        <div class="table-responsive">
+          <table style="width:90%" align="center" class="table table-striped">
+            <tbody>
+              <tr>
+                <td width="50%">{{ x.course }}</td>
+                <td width="50%">{{ x.rank }}</td>
+              </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

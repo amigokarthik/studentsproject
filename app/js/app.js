@@ -64,6 +64,7 @@ var controllers = [
   // Include controllers here. example require('/path-to-your-controller-file')
    require('./components/login/login.controller'),
    require('./components/home/home.controller'),
+   require('./components/admin/admin.controller'),
 ];
 
 
@@ -74,6 +75,8 @@ var services = [
   // Include services here. example require('/path-to-your-service-file')
   require('./components/login/login.service'),
   require('./components/login/session.service'),
+  require('./components/home/home.service'),
+  require('./components/admin/admin.service'),
 ];
 
 

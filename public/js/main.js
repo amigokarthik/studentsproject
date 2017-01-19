@@ -50,11 +50,59 @@ function AppConfig($stateProvider, $locationProvider, AppConstants,
   })
   .state('home', {
     url: '/home',
+    redirectTo:"header",
     authenticate: true,
     views : {
       'main' : {
+        templateUrl: './app/components/home/home.html'
+      }
+    }
+  })
+  .state('header', {
+    parent:'home',
+    url: '/header',
+    authenticate: true,
+    views : {
+      'content' : {
         templateUrl: './app/components/home/header.html',
         controller:'HomeController',
+        controllerAs:'model'
+      },
+      'subcontent' : {
+        templateUrl: './app/components/home/content.html',
+        controller:'HomeController',
+        controllerAs:'model'
+      },
+      'bottomcontent' : {
+        templateUrl: './app/components/home/footer.html',
+        controller:'HomeController',
+        controllerAs:'model'
+      }
+    }
+  })
+  .state('admin', {
+    url: '/admin',
+    redirectTo:"root",
+    authenticate: false,
+    views : {
+      'main' : {
+        templateUrl: './app/components/admin/root.html'
+      }
+    }
+  })
+  .state('root', {
+    parent:'admin',
+    url: '/root',
+    authenticate: false,
+    views : {
+      'leftcontent' : {
+        templateUrl: './app/components/admin/left.html',
+        controller:'AdminController',
+        controllerAs:'model'
+      },
+      'rightcontent' : {
+        templateUrl: './app/components/admin/right.html',
+        controller:'AdminController',
         controllerAs:'model'
       }
     }
@@ -77,7 +125,7 @@ function AppConfig($stateProvider, $locationProvider, AppConstants,
 module.exports = AppConfig;
 
 }).call(this,require('_process'))
-},{"_process":21}],2:[function(require,module,exports){
+},{"_process":24}],2:[function(require,module,exports){
 'use strict';
 
 // Cloud server ip
@@ -171,6 +219,7 @@ var controllers = [
   // Include controllers here. example require('/path-to-your-controller-file')
    require('./components/login/login.controller'),
    require('./components/home/home.controller'),
+   require('./components/admin/admin.controller'),
 ];
 
 
@@ -181,6 +230,8 @@ var services = [
   // Include services here. example require('/path-to-your-service-file')
   require('./components/login/login.service'),
   require('./components/login/session.service'),
+  require('./components/home/home.service'),
+  require('./components/admin/admin.service'),
 ];
 
 
@@ -243,7 +294,7 @@ angular.bootstrap(document, [appName], {
   strictDi: true
 });
 
-},{"./app.config":1,"./app.constants":2,"./app.onrun":4,"./components/home/home.controller":5,"./components/login/login.controller":6,"./components/login/login.service":7,"./components/login/session.service":8,"./templatescache":9,"angular":20,"angular-animate":11,"angular-cookies":13,"angular-sanitize":15,"angular-toastr":17,"angular-ui-router":18}],4:[function(require,module,exports){
+},{"./app.config":1,"./app.constants":2,"./app.onrun":4,"./components/admin/admin.controller":5,"./components/admin/admin.service":6,"./components/home/home.controller":7,"./components/home/home.service":8,"./components/login/login.controller":9,"./components/login/login.service":10,"./components/login/session.service":11,"./templatescache":12,"angular":23,"angular-animate":14,"angular-cookies":16,"angular-sanitize":18,"angular-toastr":20,"angular-ui-router":21}],4:[function(require,module,exports){
 'use strict';
 
 /* Inject Dependencies */
@@ -270,8 +321,9 @@ function onRunConfig($rootScope, $state, toastr, SessionService){
 
     if(toState.authenticate){
       console.log(SessionService.getUser())
-      if(SessionService.getUser() == null){
-        $state.go('login', toParams);
+      if(SessionService.getUser() == ''){
+        $state.go('login');
+        console.log('log');
       }
     }
 
@@ -301,7 +353,7 @@ module.exports = onRunConfig;
 'use strict';
 
 /* Inject Dependencies */
-HomeController.$inject = ['$scope', '$location', '$state', 'AppConstants','LoginService','SessionService'];
+AdminController.$inject = ['$scope', '$location', '$state', 'AppConstants','SessionService','AdminService', 'toastr'];
 
 /**
 * Controller responsible for managing login data
@@ -314,7 +366,181 @@ HomeController.$inject = ['$scope', '$location', '$state', 'AppConstants','Login
 * @param {[type]} toastr                [description]
 * @param {[type]} SessionService        [description]
 */
-function HomeController($scope, $location, $state, AppConstants,LoginService,SessionService) {
+function AdminController($scope, $location, $state, AppConstants,
+	SessionService,AdminService, toastr) {
+	var self = this;
+
+	//============================================================================
+	//                            INIT BLOCK                                    //
+	//============================================================================
+
+
+	//============================================================================
+	//                            EVENTS BLOCK                                  //
+	//============================================================================
+
+	// Gets called when the page has completed loading
+	$scope.$on('$stateChangeSuccess', function() {
+
+		AdminService.retcom().then(function(response){
+			var datac = [];
+			for(var i = 0;i<response.length; i++){
+				datac.push(response[i]);
+				//console.log(response[i].cname);
+			}
+			self.datap = datac;
+		}, function(error){
+			console.log(error);
+		})
+
+
+	});
+	//============================================================================
+	//                            FUNCTIONS BLOCK                               //
+	//============================================================================
+
+
+
+	self.addCourse = function(){
+		console.log(self.cdesc);
+		var reqdata = {'cn':self.cName,'cd':self.cdesc};
+		var l=0;
+		AdminService.addcourse(reqdata).then(function(response){
+			console.log(response);
+		});
+	}
+
+	self.rank = function(name,course){
+		var res=document.getElementById("rnk").value;
+		console.log(res);
+		var reqdata = {"un":name,"cn":course,"rn":res};
+		var l=0;
+		AdminService.addrank(reqdata).then(function(response){
+			console.log(response);
+		});
+		$state.reload();
+	}
+
+
+
+};
+
+// Export the module
+module.exports = {
+	name : 'AdminController', // Change this name
+	fn : AdminController, // Change this function name
+	type : 'controller'
+};
+
+},{}],6:[function(require,module,exports){
+'use strict';
+
+/* Inject Dependencies */
+AdminService.$inject = ['$http', '$q', 'AppConstants'];
+
+/**
+ * Service to manage all dummy operations
+ * =============================================================================
+ *
+ * @param {{type}} $http        [description]
+ * @param {[type]} $q           [description]
+ * @param {[type]} AppConstants [description]
+ * @param {[type]} FormUtils    [description]
+ * @param {[type]} SessionService    [description]
+ */
+function AdminService($http, $q, AppConstants){
+
+    // Service instance variable
+    var INSTANCE = {};
+    var config = {
+      headers : {
+        "Content-Type" : 'application/json'
+      }
+    }
+
+    INSTANCE.addcourse  = function(params){
+      console.log("service called")
+      var deferred = $q.defer();
+      $http.post(AppConstants.apiUrl+'/adminc.php',params)
+      .success(function(response, status, headers, config) {
+        deferred.resolve(response) }).error(
+      function(data, status, headers, config){
+        deferred.reject(data)
+      });
+      // return your promise to the user
+      return deferred.promise;
+    };
+
+    INSTANCE.retcom  = function(){
+      var deferred = $q.defer();
+      $http.get(AppConstants.apiUrl+'/scourser.php')
+      .success(function(response, status, headers, config) {
+        deferred.resolve(response) }).error(
+      function(data, status, headers, config){
+        deferred.reject(data)
+      });
+
+      // return your promise to the user
+      return deferred.promise;
+
+    };
+
+    INSTANCE.addrank  = function(params){
+      console.log("rank service called")
+      var deferred = $q.defer();
+      $http.post(AppConstants.apiUrl+'/rank.php',params)
+      .success(function(response, status, headers, config) {
+        deferred.resolve(response) }).error(
+      function(data, status, headers, config){
+        deferred.reject(data)
+      });
+      // return your promise to the user
+      return deferred.promise;
+    };
+
+
+    /**
+     * Dummy Comment
+     * =========================================================================
+     * Lorem Ipsum is simply dummy text of the printing and typesetting.
+     * Lorem Ipsum has been the industry's standard dummy text ever since the
+     * 1500s, when an unknown printer took a galley of type and scrambled it
+     * to make a type specimen book.
+     *
+     * @param  {[type]} params      [description]
+     * @return {[type]}             [description]
+     */
+
+    /** functions exposed by the service **/
+    return INSTANCE;
+}
+
+// Export the module
+module.exports = {
+  name : 'AdminService', // Change this name
+  fn : AdminService // Change this function name
+};
+
+},{}],7:[function(require,module,exports){
+'use strict';
+
+/* Inject Dependencies */
+HomeController.$inject = ['$scope', '$location', '$state', 'AppConstants',
+'LoginService','SessionService','HomeService', 'toastr'];
+
+/**
+* Controller responsible for managing login data
+* =============================================================================
+*
+* @param {[type]} $scope                [description]
+* @param {[type]} $location             [description]
+* @param {[type]} AppConstants          [description]
+* @param {[type]} AuthenticationService [description]
+* @param {[type]} toastr                [description]
+* @param {[type]} SessionService        [description]
+*/
+function HomeController($scope, $location, $state, AppConstants,LoginService,
+	SessionService,HomeService, toastr) {
 	var self = this;
 
 	//============================================================================
@@ -329,21 +555,75 @@ function HomeController($scope, $location, $state, AppConstants,LoginService,Ses
 	// Gets called when the page has completed loading
 	$scope.$on('$stateChangeSuccess', function() {
 		self.un = SessionService.getUser();
+		HomeService.home().then(function(response){
+			var datac = [];
+			for(var i = 0;i<response.length; i++){
+				datac.push(response[i].cname);
+				//console.log(response[i].cname);
+			}
 
-
+			self.Gender = datac;
+		}, function(error){
+			console.log(error);
+		})
+		self.loadCourses();
+		self.loadRanks();
 
 	});
-
 	//============================================================================
 	//                            FUNCTIONS BLOCK                               //
 	//============================================================================
-
+self.loadCourses=function(){
+			HomeService.comp(self.un).then(function(response){
+				console.log(response)
+				self.datap = [];
+						for(var i = 0;i<response.length; i++){
+							self.datap.push(response[i]);
+						}
+			}, function(error){
+				console.log(error);
+			})
+}
+self.loadRanks=function(){
+	HomeService.ranks(self.un).then(function(response){
+		self.datapr = [];
+		for(var i = 0;i<response.length; i++){
+			self.datapr.push(response[i]);
+			//console.log(response[i].cdesc);
+		}
+		//console.log(self.datapr[0]);
+	}, function(error){
+		console.log(error);
+	})
+}
 	self.logout=function(){
 		SessionService.setUser('');
 		$state.go('login');
 	}
 
+	self.enroll = function(){
+		if(_.isEmpty(self.gender)){
+			toastr.info("Please select an option", "Invalid selection")
+			return;
+		}
+		var reqdata = {'un':self.un,'cn':self.gender};
+		var l=0;
+		HomeService.enroll(reqdata).then(function(response){
+			self.loadCourses();
+			console.log(response);
+		});
+		$state.reload();
+	}
 
+	self.submit = function(params){
+		//console.log("params"+params);
+		var reqdata = {'un':self.un,'cn':params};
+		var l=0;
+		HomeService.cocomp(reqdata).then(function(response){
+			self.loadCourses();
+			console.log(response);
+		});
+	}
 
 };
 
@@ -354,7 +634,122 @@ module.exports = {
 	type : 'controller'
 };
 
-},{}],6:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+'use strict';
+
+/* Inject Dependencies */
+HomeService.$inject = ['$http', '$q', 'AppConstants'];
+
+/**
+ * Service to manage all dummy operations
+ * =============================================================================
+ *
+ * @param {{type}} $http        [description]
+ * @param {[type]} $q           [description]
+ * @param {[type]} AppConstants [description]
+ * @param {[type]} FormUtils    [description]
+ * @param {[type]} SessionService    [description]
+ */
+function HomeService($http, $q, AppConstants){
+
+    // Service instance variable
+    var INSTANCE = {};
+    var config = {
+      headers : {
+        "Content-Type" : 'application/json'
+      }
+    }
+
+    /**
+     * Dummy Comment
+     * =========================================================================
+     * Lorem Ipsum is simply dummy text of the printing and typesetting.
+     * Lorem Ipsum has been the industry's standard dummy text ever since the
+     * 1500s, when an unknown printer took a galley of type and scrambled it
+     * to make a type specimen book.
+     *
+     * @param  {[type]} params      [description]
+     * @return {[type]}             [description]
+     */
+    INSTANCE.home  = function(){
+      var deferred = $q.defer();
+      $http.get(AppConstants.apiUrl+'/courser.php')
+      .success(function(response, status, headers, config) {
+        deferred.resolve(response) }).error(
+      function(data, status, headers, config){
+        deferred.reject(data)
+      });
+      // return your promise to the user
+      return deferred.promise;
+
+    };
+
+    INSTANCE.enroll  = function(params){
+      console.log("service called")
+      var deferred = $q.defer();
+      $http.post(AppConstants.apiUrl+'/coursee.php',params)
+      .success(function(response, status, headers, config) {
+        deferred.resolve(response) }).error(
+      function(data, status, headers, config){
+        deferred.reject(data)
+      });
+      // return your promise to the user
+      return deferred.promise;
+
+    };
+
+    INSTANCE.comp  = function(params){
+      var deferred = $q.defer();
+      $http.get(AppConstants.apiUrl+'/coursec.php?un='+params)
+      .success(function(response, status, headers, config) {
+        deferred.resolve(response) }).error(
+      function(data, status, headers, config){
+        deferred.reject(data)
+      });
+      // return your promise to the user
+      return deferred.promise;
+
+    };
+
+    INSTANCE.cocomp  = function(params){
+      console.log("service called")
+      var deferred = $q.defer();
+      $http.post(AppConstants.apiUrl+'/courseco.php',params)
+      .success(function(response, status, headers, config) {
+        deferred.resolve(response) }).error(
+      function(data, status, headers, config){
+        deferred.reject(data)
+      });
+      // return your promise to the user
+      return deferred.promise;
+
+    };
+
+    INSTANCE.ranks  = function(params){
+      console.log("service called")
+      var deferred = $q.defer();
+      $http.post(AppConstants.apiUrl+'/ranksre.php?un='+params)
+      .success(function(response, status, headers, config) {
+        deferred.resolve(response) }).error(
+      function(data, status, headers, config){
+        deferred.reject(data)
+      });
+      // return your promise to the user
+      return deferred.promise;
+    };
+
+
+    /** functions exposed by the service **/
+    return INSTANCE;
+}
+
+// Export the module
+module.exports = {
+  name : 'HomeService', // Change this name
+  fn : HomeService // Change this function name
+};
+
+},{}],9:[function(require,module,exports){
 'use strict';
 
 /* Inject Dependencies */
@@ -385,7 +780,10 @@ function LoginController($scope, $location, $state, AppConstants,LoginService,Se
 
 	// Gets called when the page has completed loading
 	$scope.$on('$stateChangeSuccess', function() {
-
+		self.un = SessionService.getUser();
+		if(SessionService.getUser() != ''){
+			$state.go('home');
+		}
 	});
 
 	//============================================================================
@@ -395,7 +793,7 @@ function LoginController($scope, $location, $state, AppConstants,LoginService,Se
 	self.login = function(){
 		var l=0;
 		LoginService.login().then(function(response){
-			console.log(response);
+			//console.log(response);
 			var data = Object.keys(response);
 			var datap = [];
 			for(var i = 0;i<data.length-2; i++){
@@ -432,7 +830,7 @@ module.exports = {
 	type : 'controller'
 };
 
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 /* Inject Dependencies */
@@ -487,7 +885,7 @@ module.exports = {
   fn : LoginService // Change this function name
 };
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 /* Inject Dependencies */
@@ -542,13 +940,18 @@ module.exports = {
   fn : SessionService // Change this function name
 };
 
-},{}],9:[function(require,module,exports){
-angular.module('templatescache', []).run(['$templateCache', function($templateCache) {$templateCache.put('./app/components/home/content.html','my content\n');
-$templateCache.put('./app/components/home/header.html','\n<div class="row">\n  <div class="col-sm-12">\n    <center><h1>welcome to Innovision Student Portal</h1><br/></center>\n  </div>\n</div>\n<br/>\n<div class="row">\n  <div class="col-sm-2"><font style="color:Green;"><b>Username : {{model.un}}</b></font></div>\n  <div class="col-sm-8"></div>\n  <div class="col-sm-2">\n    <a ng-click="model.logout()" ><input type="button" class="btn btn-primary btn-sm" value="Logout"/></a>\n  </div>\n</div>\n<br/>\n<hr/>\n<div ui-view=\'content\'></div>\n');
+},{}],12:[function(require,module,exports){
+angular.module('templatescache', []).run(['$templateCache', function($templateCache) {$templateCache.put('./app/components/admin/left.html','<center>\n<form ng-submit="model.addCourse()" name="pForm">\n<div class="table-responsive">\n<table style="width:90%" align="center" class="table table-striped">\n<tbody>\n<tr>\n    <td width="18%">Course Name : <span style="color:red">*</span>:</td>\n    <td width="82%">\n     <input type="text" class="form-control" aria-describedby="sizing-addon1" ng-model="model.cName" placeholder="Username" name="cname" ng-required="true" />\n     <div ng-show="(pForm.cname.$touched && pForm.cname.$invalid)">\n     <small style="color : red; display : block; text-align : center;">Please enter a valid course name</small>\n     </div>\n     </td>\n</tr>\n<tr>\n     <td width="18%">Course Description : <span style="color:red">*</span>:</td>\n         <td width="82%">\n     <textarea type="text" class="form-control" aria-describedby="sizing-addon1" name="cdesc" style="color:black;"  placeholder="Course Description" ng-model="model.cdesc" ng-required="true"></textarea>\n     </td>\n</tr>\n<tr></tr>\n<tr>\n     <td></td>\n     <td><center><input type="submit" class="btn btn-primary btn-lg" value="Add" ng-disabled="pForm.$invalid" />\n      </center></td>\n</tr>\n</tbody>\n</table>\n    </form>\n</center>\n');
+$templateCache.put('./app/components/admin/right.html','<font style="color:Blue;"><b>Provide student rankings for course:</b></font>\n<br/><br/>\n<div class="form-group" ng-repeat="x in model.datap track by $index" id="co">\n<form ng-submit="model.rank(x.username,x.course)" name="pForm">\n<font style="color:Blue;">Username : </font>{{x.username}}</p>\n<font style="color:Blue;">Course : </font>{{x.course}}</p>\n<input type="number"  class="form-control" aria-describedby="sizing-addon1" pattern=".{10,}" ng-model="phone" min="1" max="10"  name="phone" style="color:black;"  placeholder="Give Rank" id="rnk" ></input>\n<br/>\n<input type="submit" class="btn btn-primary btn-md" value="Submit Rank"  />\n<hr/>\n</form>\n</div>\n');
+$templateCache.put('./app/components/admin/root.html','<div class="row">\n  <div class="col-sm-12">\n    <center><h1><font style="color:Brown;"><b>Student Portal Admin</b></font></h1><br/></center>\n  </div>\n</div>\n<hr/>\n<div class="row">\n  <div class="col-sm-6">\n    <div ui-view=\'leftcontent\'></div>\n  </div>\n  <div class="col-sm-6">\n    <div ui-view=\'rightcontent\'></div>\n  </div>\n</div>\n');
+$templateCache.put('./app/components/home/content.html','<div class="row">\n  <div class="col-sm-6">\n    <font style="color:Blue;"><b> Available courses : </b></font>\n    <form  name="pForm">\n      <select name="gender" class="form-control" ng-model="model.gender" ng-options="x for x in model.Gender" ng-required="true"></select>\n      <br/>\n      <center>\n        <input type="button" ng-click="model.enroll()" class="btn btn-primary btn-sm" value="Enroll"/>\n      </center>\n    </form>\n  </div>\n  <div class="col-sm-6">\n    <font style="color:Blue;"><b>Your Course :</b></font>\n    <div class="form-group" ng-repeat="x in model.datap track by $index" id="co">\n      <font style="color:Green;"><b>Course Name : </b></font><font style="color:brown;"><b>{{x.cname}}</b></font>\n      <br/>\n      <font style="color:Green;"><b>Course Description : </b></font><font style="color:brown;"><b>{{x.cdesc}}</b></font>\n      <br/>\n      <a ng-click="model.submit(x.cname)"><input type="button" class="btn btn-primary btn-sm" value="Complete"/></a>\n    </div>\n  </div>\n</div>\n');
+$templateCache.put('./app/components/home/footer.html','<div class="row">\n  <div class="col-sm-12">\n    <font style="color:Blue;"><b>Your Course Ranking :</b></font>\n    <div class="table-responsive">\n      <table style="width:90%" align="center" class="table table-striped">\n        <tbody>\n          <tr>\n            <td width="50%">Course</td>\n            <td width="50%">Rank</td>\n          </tr>\n      </tbody>\n    </table>\n    </div>\n    <div ng-repeat="x in model.datapr track by $index">\n      <div class="form-group">\n        <div class="table-responsive">\n          <table style="width:90%" align="center" class="table table-striped">\n            <tbody>\n              <tr>\n                <td width="50%">{{ x.course }}</td>\n                <td width="50%">{{ x.rank }}</td>\n              </tr>\n          </tbody>\n        </table>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n');
+$templateCache.put('./app/components/home/header.html','\n<div class="row">\n  <div class="col-sm-12">\n    <center><h1>welcome to Innovision Student Portal</h1><br/></center>\n  </div>\n</div>\n<br/>\n<div class="row">\n  <div class="col-sm-2"><font style="color:Green;"><b>Username : {{model.un}}</b></font></div>\n  <div class="col-sm-8"></div>\n  <div class="col-sm-2">\n    <a ng-click="model.logout()" ><input type="button" class="btn btn-primary btn-sm" value="Logout"/></a>\n  </div>\n</div>\n<br/>\n<hr/>\n');
+$templateCache.put('./app/components/home/home.html','<div ui-view=\'content\'></div>\n<div ui-view=\'subcontent\'></div>\n<div ui-view=\'bottomcontent\'></div>\n');
 $templateCache.put('./app/components/login/log.html','\n  <div class="row">\n    <div class="col-sm-12">\n      <center><h1>Innovision Student Portal</h1><br/></center>\n    </div>\n  </div>\n  <hr/>\n\n  <font style="color:green;">If your are a returning user please login</font>\n  <div class="row">\n    <form ng-submit="model.login()" name="pFormss">\n      <div class="col-sm-5">\n\n        <input type="text" class="form-control" aria-describedby="sizing-addon1" ng-model="model.userNamel" placeholder="Username" name="unamel" ng-required="true" />\n        <div ng-show="(pForm.unamel.$touched && pForm.unamel.$invalid)">\n          <small style="color : red; display : block; text-align : center;">Please enter a valid user name</small>\n        </div>\n\n      </div>\n      <div class="col-sm-5">\n\n        <input type="password" placeholder="Password" class="form-control" pattern=".{6,24}" aria-describedby="sizing-addon1" ng-model="model.pswdl"  name="pswdl" ng-required="true" />\n        <div ng-show="(pForm.pswdl.$touched && pForm.pswdl.$invalid)">\n          <small style="color : red; display : block; text-align : center;">Password length must be between 6 and 24</small>\n        </div>\n\n      </div>\n      <div class="col-sm-2">\n        <input type="submit" class="btn btn-primary btn-lg" value="Login"  />\n      </div>\n    </form>\n    <font style="color:Red;">{{er}}</font>\n  </div>\n  <br/>\n  <hr/>\n\n  <a ui-sref=\'register\'>Register</a>\n\n  <div ui-view=\'subcontent\'></div>\n');
-$templateCache.put('./app/components/login/login.html','bjscbdjk\n\n<div ui-view=\'content\'></div>\n');
+$templateCache.put('./app/components/login/login.html','<div ui-view=\'content\'></div>\n');
 $templateCache.put('./app/components/login/reg.html','\n<div class="row">\n  <div class="col-sm-12">\n    <center>\n      <form ng-submit="createMeetup()" name="pForm">\n        <div class="table-responsive">\n          <table style="width:90%" align="center" class="table table-striped">\n            <tbody>\n              <tr>\n                <td width="18%">User Name <span style="color:red">*</span>:</td>\n                <td width="82%">\n                  <input type="text" class="form-control" aria-describedby="sizing-addon1" ng-model="userName" placeholder="Username" name="uname" ng-required="true" />\n                  <div ng-show="(pForm.uname.$touched && pForm.uname.$invalid) || usernameValid">\n                    <small style="color : red; display : block; text-align : center;">Please enter a valid user name</small>\n                  </div>\n                </td>\n              </tr>\n              <tr>\n                <td width="18%">Password<span style="color:red">*</span>:</td>\n                <td width="82%">\n                  <input type="password" placeholder="Password" class="form-control" pattern=".{6,24}" aria-describedby="sizing-addon1" ng-model="pswd"  name="pswd" ng-required="true" />\n                  <div ng-show="(pForm.pswd.$touched && pForm.pswd.$invalid) || usernameValid">\n                    <small style="color : red; display : block; text-align : center;">Password length must be between 6 and 24</small>\n                  </div>\n                </td>\n              </tr>\n              <tr>\n                <td width="18%">College Name <span style="color:red">*</span>:</td>\n                <td width="82%">\n                  <input type="text" class="form-control" aria-describedby="sizing-addon1" ng-model="cName" placeholder="College Name" name="cname" ng-required="true" />\n                  <div ng-show="(pForm.cname.$touched && pForm.cname.$invalid)">\n                    <small style="color : red; display : block; text-align : center;">Please enter a valid college name</small>\n                  </div>\n                </td>\n              </tr>\n              <tr>\n                <td width="18%">Email<span style="color:red">*</span>:</td>\n                <td width="82%">\n                  <input type="email" class="form-control" placeholder="me@example.com" aria-describedby="sizing-addon1" name="input" ng-model="email" ng-required="true">\n                  <div ng-show="(pForm.input.$touched && pForm.input.$invalid) || pForm.input.$error.email">\n                    <small style="color : red; display : block; text-align : center;">Please enter a valid email</small>\n                  </div>\n                </td>\n              </tr>\n              <tr></tr>\n              <tr>\n                <td></td>\n                <td><center><input type="submit" class="btn btn-primary btn-lg" value="Register" ng-disabled="pForm.$invalid" />\n                </center></td>\n              </tr>\n            </tbody>\n          </table>\n        </form>\n        <font style="color:Red;">{{regerr}}</font>\n      </center>\n    </div>\n  </div>\n</div>\n');}]);
-},{}],10:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.7
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -4696,11 +5099,11 @@ angular.module('ngAnimate', [])
 
 })(window, window.angular);
 
-},{}],11:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 require('./angular-animate');
 module.exports = 'ngAnimate';
 
-},{"./angular-animate":10}],12:[function(require,module,exports){
+},{"./angular-animate":13}],15:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.7
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -5024,11 +5427,11 @@ angular.module('ngCookies').provider('$$cookieWriter', function $$CookieWriterPr
 
 })(window, window.angular);
 
-},{}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 require('./angular-cookies');
 module.exports = 'ngCookies';
 
-},{"./angular-cookies":12}],14:[function(require,module,exports){
+},{"./angular-cookies":15}],17:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.7
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -5747,11 +6150,11 @@ angular.module('ngSanitize').filter('linky', ['$sanitize', function($sanitize) {
 
 })(window, window.angular);
 
-},{}],15:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 require('./angular-sanitize');
 module.exports = 'ngSanitize';
 
-},{"./angular-sanitize":14}],16:[function(require,module,exports){
+},{"./angular-sanitize":17}],19:[function(require,module,exports){
 (function() {
   'use strict';
 
@@ -6249,12 +6652,12 @@ module.exports = 'ngSanitize';
 
 angular.module("toastr").run(["$templateCache", function($templateCache) {$templateCache.put("directives/progressbar/progressbar.html","<div class=\"toast-progress\"></div>\n");
 $templateCache.put("directives/toast/toast.html","<div class=\"{{toastClass}} {{toastType}}\" ng-click=\"tapToast()\">\n  <div ng-switch on=\"allowHtml\">\n    <div ng-switch-default ng-if=\"title\" class=\"{{titleClass}}\" aria-label=\"{{title}}\">{{title}}</div>\n    <div ng-switch-default class=\"{{messageClass}}\" aria-label=\"{{message}}\">{{message}}</div>\n    <div ng-switch-when=\"true\" ng-if=\"title\" class=\"{{titleClass}}\" ng-bind-html=\"title\"></div>\n    <div ng-switch-when=\"true\" class=\"{{messageClass}}\" ng-bind-html=\"message\"></div>\n  </div>\n  <progress-bar ng-if=\"progressBar\"></progress-bar>\n</div>\n");}]);
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 require('./dist/angular-toastr.tpls.js');
 module.exports = 'toastr';
 
 
-},{"./dist/angular-toastr.tpls.js":16}],18:[function(require,module,exports){
+},{"./dist/angular-toastr.tpls.js":19}],21:[function(require,module,exports){
 /**
  * State-based routing for AngularJS
  * @version v0.3.1
@@ -10831,7 +11234,7 @@ angular.module('ui.router.state')
   .filter('isState', $IsStateFilter)
   .filter('includedByState', $IncludedByStateFilter);
 })(window, window.angular);
-},{}],19:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /**
  * @license AngularJS v1.5.7
  * (c) 2010-2016 Google, Inc. http://angularjs.org
@@ -42305,11 +42708,11 @@ $provide.value("$locale", {
 })(window);
 
 !window.angular.$$csp().noInlineStyle && window.angular.element(document.head).prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>');
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 require('./angular');
 module.exports = angular;
 
-},{"./angular":19}],21:[function(require,module,exports){
+},{"./angular":22}],24:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 

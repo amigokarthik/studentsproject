@@ -48,11 +48,59 @@ function AppConfig($stateProvider, $locationProvider, AppConstants,
   })
   .state('home', {
     url: '/home',
+    redirectTo:"header",
     authenticate: true,
     views : {
       'main' : {
+        templateUrl: './app/components/home/home.html'
+      }
+    }
+  })
+  .state('header', {
+    parent:'home',
+    url: '/header',
+    authenticate: true,
+    views : {
+      'content' : {
         templateUrl: './app/components/home/header.html',
         controller:'HomeController',
+        controllerAs:'model'
+      },
+      'subcontent' : {
+        templateUrl: './app/components/home/content.html',
+        controller:'HomeController',
+        controllerAs:'model'
+      },
+      'bottomcontent' : {
+        templateUrl: './app/components/home/footer.html',
+        controller:'HomeController',
+        controllerAs:'model'
+      }
+    }
+  })
+  .state('admin', {
+    url: '/admin',
+    redirectTo:"root",
+    authenticate: false,
+    views : {
+      'main' : {
+        templateUrl: './app/components/admin/root.html'
+      }
+    }
+  })
+  .state('root', {
+    parent:'admin',
+    url: '/root',
+    authenticate: false,
+    views : {
+      'leftcontent' : {
+        templateUrl: './app/components/admin/left.html',
+        controller:'AdminController',
+        controllerAs:'model'
+      },
+      'rightcontent' : {
+        templateUrl: './app/components/admin/right.html',
+        controller:'AdminController',
         controllerAs:'model'
       }
     }

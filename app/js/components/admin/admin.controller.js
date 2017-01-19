@@ -1,8 +1,7 @@
 'use strict';
 
 /* Inject Dependencies */
-HomeController.$inject = ['$scope', '$location', '$state', 'AppConstants',
-'LoginService','SessionService','HomeService', 'toastr'];
+AdminController.$inject = ['$scope', '$location', '$state', 'AppConstants','SessionService','AdminService', 'toastr'];
 
 /**
 * Controller responsible for managing login data
@@ -15,8 +14,8 @@ HomeController.$inject = ['$scope', '$location', '$state', 'AppConstants',
 * @param {[type]} toastr                [description]
 * @param {[type]} SessionService        [description]
 */
-function HomeController($scope, $location, $state, AppConstants,LoginService,
-	SessionService,HomeService, toastr) {
+function AdminController($scope, $location, $state, AppConstants,
+	SessionService,AdminService, toastr) {
 	var self = this;
 
 	//============================================================================
@@ -30,82 +29,53 @@ function HomeController($scope, $location, $state, AppConstants,LoginService,
 
 	// Gets called when the page has completed loading
 	$scope.$on('$stateChangeSuccess', function() {
-		self.un = SessionService.getUser();
-		HomeService.home().then(function(response){
+
+		AdminService.retcom().then(function(response){
 			var datac = [];
 			for(var i = 0;i<response.length; i++){
-				datac.push(response[i].cname);
+				datac.push(response[i]);
 				//console.log(response[i].cname);
 			}
-
-			self.Gender = datac;
+			self.datap = datac;
 		}, function(error){
 			console.log(error);
 		})
-		self.loadCourses();
-		self.loadRanks();
+
 
 	});
 	//============================================================================
 	//                            FUNCTIONS BLOCK                               //
 	//============================================================================
-self.loadCourses=function(){
-			HomeService.comp(self.un).then(function(response){
-				console.log(response)
-				self.datap = [];
-						for(var i = 0;i<response.length; i++){
-							self.datap.push(response[i]);
-						}
-			}, function(error){
-				console.log(error);
-			})
-}
-self.loadRanks=function(){
-	HomeService.ranks(self.un).then(function(response){
-		self.datapr = [];
-		for(var i = 0;i<response.length; i++){
-			self.datapr.push(response[i]);
-			//console.log(response[i].cdesc);
-		}
-		//console.log(self.datapr[0]);
-	}, function(error){
-		console.log(error);
-	})
-}
-	self.logout=function(){
-		SessionService.setUser('');
-		$state.go('login');
+
+
+
+	self.addCourse = function(){
+		console.log(self.cdesc);
+		var reqdata = {'cn':self.cName,'cd':self.cdesc};
+		var l=0;
+		AdminService.addcourse(reqdata).then(function(response){
+			console.log(response);
+		});
 	}
 
-	self.enroll = function(){
-		if(_.isEmpty(self.gender)){
-			toastr.info("Please select an option", "Invalid selection")
-			return;
-		}
-		var reqdata = {'un':self.un,'cn':self.gender};
+	self.rank = function(name,course){
+		var res=document.getElementById("rnk").value;
+		console.log(res);
+		var reqdata = {"un":name,"cn":course,"rn":res};
 		var l=0;
-		HomeService.enroll(reqdata).then(function(response){
-			self.loadCourses();
+		AdminService.addrank(reqdata).then(function(response){
 			console.log(response);
 		});
 		$state.reload();
 	}
 
-	self.submit = function(params){
-		//console.log("params"+params);
-		var reqdata = {'un':self.un,'cn':params};
-		var l=0;
-		HomeService.cocomp(reqdata).then(function(response){
-			self.loadCourses();
-			console.log(response);
-		});
-	}
+
 
 };
 
 // Export the module
 module.exports = {
-	name : 'HomeController', // Change this name
-	fn : HomeController, // Change this function name
+	name : 'AdminController', // Change this name
+	fn : AdminController, // Change this function name
 	type : 'controller'
 };

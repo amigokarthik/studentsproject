@@ -1,0 +1,30 @@
+<center>
+<form ng-submit="model.addCourse()" name="pForm">
+<div class="table-responsive">
+<table style="width:90%" align="center" class="table table-striped">
+<tbody>
+<tr>
+    <td width="18%">Course Name : <span style="color:red">*</span>:</td>
+    <td width="82%">
+     <input type="text" class="form-control" aria-describedby="sizing-addon1" ng-model="model.cName" placeholder="Username" name="cname" ng-required="true" />
+     <div ng-show="(pForm.cname.$touched && pForm.cname.$invalid)">
+     <small style="color : red; display : block; text-align : center;">Please enter a valid course name</small>
+     </div>
+     </td>
+</tr>
+<tr>
+     <td width="18%">Course Description : <span style="color:red">*</span>:</td>
+         <td width="82%">
+     <textarea type="text" class="form-control" aria-describedby="sizing-addon1" name="cdesc" style="color:black;"  placeholder="Course Description" ng-model="model.cdesc" ng-required="true"></textarea>
+     </td>
+</tr>
+<tr></tr>
+<tr>
+     <td></td>
+     <td><center><input type="submit" class="btn btn-primary btn-lg" value="Add" ng-disabled="pForm.$invalid" />
+      </center></td>
+</tr>
+</tbody>
+</table>
+    </form>
+</center>

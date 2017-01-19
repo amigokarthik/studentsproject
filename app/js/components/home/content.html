@@ -1,1 +1,22 @@
-my content
+<div class="row">
+  <div class="col-sm-6">
+    <font style="color:Blue;"><b> Available courses : </b></font>
+    <form  name="pForm">
+      <select name="gender" class="form-control" ng-model="model.gender" ng-options="x for x in model.Gender" ng-required="true"></select>
+      <br/>
+      <center>
+        <input type="button" ng-click="model.enroll()" class="btn btn-primary btn-sm" value="Enroll"/>
+      </center>
+    </form>
+  </div>
+  <div class="col-sm-6">
+    <font style="color:Blue;"><b>Your Course :</b></font>
+    <div class="form-group" ng-repeat="x in model.datap track by $index" id="co">
+      <font style="color:Green;"><b>Course Name : </b></font><font style="color:brown;"><b>{{x.cname}}</b></font>
+      <br/>
+      <font style="color:Green;"><b>Course Description : </b></font><font style="color:brown;"><b>{{x.cdesc}}</b></font>
+      <br/>
+      <a ng-click="model.submit(x.cname)"><input type="button" class="btn btn-primary btn-sm" value="Complete"/></a>
+    </div>
+  </div>
+</div>

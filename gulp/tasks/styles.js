@@ -27,6 +27,7 @@ gulp.task('scss', function () {
       config.bowerDir + '/font-awesome/scss',
       config.bowerDir + '/awesome-bootstrap-checkbox',
 
+
       // Add extra vendor libraries pulled by bower here
     ]
   })
@@ -48,7 +49,8 @@ gulp.task('scss', function () {
 gulp.task('css', function () {
   // Grabs all the css files listed
   return gulp.src([
-    config.bowerDir + '/animate.css/animate.css'
+    config.bowerDir + '/animate.css/animate.css',
+    config.nodeDir + '/angular-toastr/dist/angular-toastr.css',
     // Add all vendor css libraries here
   ])
   .pipe(plumber())

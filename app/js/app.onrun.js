@@ -24,8 +24,9 @@ function onRunConfig($rootScope, $state, toastr, SessionService){
 
     if(toState.authenticate){
       console.log(SessionService.getUser())
-      if(SessionService.getUser() == null){
-        $state.go('login', toParams);
+      if(SessionService.getUser() == ''){
+        $state.go('login');
+        console.log('log');
       }
     }
 

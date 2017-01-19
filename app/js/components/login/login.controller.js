@@ -28,7 +28,10 @@ function LoginController($scope, $location, $state, AppConstants,LoginService,Se
 
 	// Gets called when the page has completed loading
 	$scope.$on('$stateChangeSuccess', function() {
-
+		self.un = SessionService.getUser();
+		if(SessionService.getUser() != ''){
+			$state.go('home');
+		}
 	});
 
 	//============================================================================
@@ -38,7 +41,7 @@ function LoginController($scope, $location, $state, AppConstants,LoginService,Se
 	self.login = function(){
 		var l=0;
 		LoginService.login().then(function(response){
-			console.log(response);
+			//console.log(response);
 			var data = Object.keys(response);
 			var datap = [];
 			for(var i = 0;i<data.length-2; i++){
